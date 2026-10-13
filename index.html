@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="warm-oat">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#F6F4EE">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="description" content="Clean Neo-Brutalism Mobile To-Do List Web App เชื่อมต่อฐานข้อมูล Google Sheets อัตโนมัติ">
+  
+  <title>To-Do List | Neo-Brutalism Mobile</title>
+  
+  <!-- Google Fonts: 100% Kanit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Confetti Celebration Canvas -->
+  <canvas class="confetti-canvas" id="confettiCanvas"></canvas>
+
+  <!-- Main Responsive Container -->
+  <main class="app-viewport">
+    
+    <!-- App Header -->
+    <header class="app-header">
+      <div class="header-top-row">
+        <div class="brand-wrapper">
+          <div class="app-logo-badge" title="To-Do List">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          <div class="app-title-group">
+            <h1>TO-DO LIST</h1>
+            <div class="header-date-text" id="headerDate">วันอังคารที่ 13 ต.ค. 2569</div>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <!-- Google Sheets Sync Indicator & Settings Button -->
+          <button type="button" class="sync-indicator" id="syncIndicatorBtn" title="เชื่อมต่อ Google Sheets">
+            <span class="sync-dot" id="syncDot"></span>
+            <span id="syncText">Google Sheets</span>
+          </button>
+
+          <!-- Theme Switcher Button -->
+          <button type="button" class="nb-icon-btn" id="themeToggleBtn" title="เปลี่ยนธีมสี">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="13.5" cy="6.5" r=".8" fill="currentColor"></circle>
+              <circle cx="17.5" cy="10.5" r=".8" fill="currentColor"></circle>
+              <circle cx="8.5" cy="7.5" r=".8" fill="currentColor"></circle>
+              <circle cx="6.5" cy="12.5" r=".8" fill="currentColor"></circle>
+              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Progress Card -->
+    <section class="progress-container">
+      <div class="nb-box progress-card">
+        <div class="progress-header">
+          <span class="progress-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+            <span>ความคืบหน้า</span>
+            <span class="progress-percentage-badge" id="progressBadge">0%</span>
+          </span>
+          <span class="header-date-text" id="progressText" style="font-weight: 600;">เสร็จแล้ว 0/0 งาน</span>
+        </div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" id="progressBarFill"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filter Tabs -->
+    <nav class="filter-tabs-wrapper" aria-label="Task Filters">
+      <button type="button" class="filter-tab active" data-filter="all">
+        <span>ทั้งหมด</span>
+        <span class="filter-count" id="countAll">0</span>
+      </button>
+      <button type="button" class="filter-tab" data-filter="active">
+        <span>ยังไม่เสร็จ</span>
+        <span class="filter-count" id="countActive">0</span>
+      </button>
+      <button type="button" class="filter-tab" data-filter="completed">
+        <span>ทำเสร็จแล้ว</span>
+        <span class="filter-count" id="countCompleted">0</span>
+      </button>
+    </nav>
+
+    <!-- Task List Area -->
+    <section class="task-list-wrapper">
+      <div id="taskList" style="display: flex; flex-direction: column; gap: 10px;"></div>
+
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState" style="display: none;">
+        <svg class="empty-icon-svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+          <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+          <path d="M9 14l2 2 4-4"></path>
+        </svg>
+        <div class="empty-title">ยังไม่มีสิ่งที่ต้องทำ</div>
+        <div class="empty-desc">พิมพ์สิ่งที่ต้องทำในช่องด้านล่าง แล้วกดเพิ่มได้ทันที</div>
+      </div>
+    </section>
+
+    <!-- Floating Bottom Quick Add Bar -->
+    <footer class="bottom-bar">
+      <form class="quick-add-form" id="quickAddForm" autocomplete="off">
+        <input 
+          type="text" 
+          class="quick-input" 
+          id="quickTaskInput" 
+          placeholder="พิมพ์สิ่งที่ต้องทำ แล้วกดเพิ่ม..." 
+          required
+          maxlength="160"
+        >
+        <button type="submit" class="nb-btn add-submit-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>เพิ่มงาน</span>
+        </button>
+      </form>
+    </footer>
+
+  </main>
+
+  <!-- Modal: Theme Switcher -->
+  <div class="modal-overlay" id="themeModal">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h2 class="modal-title">เลือกโทนสีที่ชอบ</h2>
+        <button type="button" class="nb-icon-btn modal-close-btn" id="closeThemeModal">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="theme-grid">
+        <!-- Theme 1 -->
+        <div class="theme-card-option" data-theme="warm-oat">
+          <div class="theme-preview-dots">
+            <span class="theme-dot" style="background:#F6F4EE;"></span>
+            <span class="theme-dot" style="background:#312E81;"></span>
+            <span class="theme-dot" style="background:#FF6448;"></span>
+          </div>
+          <div class="theme-name">1. Warm Oat & Indigo (แนะนำ)</div>
+        </div>
+
+        <!-- Theme 2 -->
+        <div class="theme-card-option" data-theme="pastel-pop">
+          <div class="theme-preview-dots">
+            <span class="theme-dot" style="background:#FFFDF5;"></span>
+            <span class="theme-dot" style="background:#FF5722;"></span>
+            <span class="theme-dot" style="background:#38BDF8;"></span>
+          </div>
+          <div class="theme-name">2. Pastel Pop Retro</div>
+        </div>
+
+        <!-- Theme 3 -->
+        <div class="theme-card-option" data-theme="matcha">
+          <div class="theme-preview-dots">
+            <span class="theme-dot" style="background:#F5F5F0;"></span>
+            <span class="theme-dot" style="background:#15803D;"></span>
+            <span class="theme-dot" style="background:#4ADE80;"></span>
+          </div>
+          <div class="theme-name">3. Matcha & Earthy Sage</div>
+        </div>
+
+        <!-- Theme 4 -->
+        <div class="theme-card-option" data-theme="tokyo-sunset">
+          <div class="theme-preview-dots">
+            <span class="theme-dot" style="background:#FAF8F5;"></span>
+            <span class="theme-dot" style="background:#FF5722;"></span>
+            <span class="theme-dot" style="background:#06B6D4;"></span>
+          </div>
+          <div class="theme-name">4. Tokyo Sunset</div>
+        </div>
+
+        <!-- Theme 5 -->
+        <div class="theme-card-option" data-theme="monochrome">
+          <div class="theme-preview-dots">
+            <span class="theme-dot" style="background:#FFFFFF;"></span>
+            <span class="theme-dot" style="background:#FFE500;"></span>
+            <span class="theme-dot" style="background:#18181B;"></span>
+          </div>
+          <div class="theme-name">5. Monochrome & Yellow</div>
+        </div>
+
+        <!-- Theme 6 -->
+        <div class="theme-card-option" data-theme="midnight-dark">
+          <div class="theme-preview-dots">
+            <span class="theme-dot" style="background:#121214;"></span>
+            <span class="theme-dot" style="background:#2DD4BF;"></span>
+            <span class="theme-dot" style="background:#F43F5E;"></span>
+          </div>
+          <div class="theme-name">6. Midnight Dark Neo</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Google Sheets Configuration -->
+  <div class="modal-overlay" id="sheetsModal">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h2 class="modal-title">ตั้งค่า Google Sheets</h2>
+        <button type="button" class="nb-icon-btn modal-close-btn" id="closeSheetsModal">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">
+        เชื่อมต่อ Google Sheets เพื่อบันทึกและซิงค์สิ่งที่ต้องทำแบบ 2 ทางได้ตลอดเวลา
+      </p>
+
+      <form id="sheetsConfigForm">
+        <div class="form-group">
+          <label class="form-label" for="sheetsUrlInput">Google Apps Script Web App URL:</label>
+          <input 
+            type="url" 
+            class="form-input" 
+            id="sheetsUrlInput" 
+            placeholder="https://script.google.com/macros/s/.../exec"
+          >
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-bottom: 18px;">
+          <button type="button" class="nb-btn" id="testSheetsBtn" style="background-color: var(--color-normal); flex: 1;">
+            ทดสอบการเชื่อมต่อ
+          </button>
+          <button type="submit" class="nb-btn" style="flex: 1;">
+            บันทึกและซิงค์
+          </button>
+        </div>
+      </form>
+
+      <div class="nb-box" style="padding: 14px; background-color: var(--bg-canvas); font-size: 0.84rem;">
+        <div style="font-weight: 700; margin-bottom: 6px;">ขั้นตอนติดตั้งใน 1 นาที:</div>
+        <ol style="padding-left: 20px; line-height: 1.6;">
+          <li>เปิด <a href="https://sheets.new" target="_blank" rel="noopener" style="color: var(--color-normal); font-weight: 700;">sheets.new</a></li>
+          <li>ไปที่เมนู <strong>ส่วนขยาย (Extensions)</strong> &gt; <strong>Apps Script</strong></li>
+          <li>นำโค้ดในไฟล์ <code>google-sheets-script/Code.gs</code> ไปวาง</li>
+          <li>กด <strong>Deploy</strong> &gt; <strong>New deployment</strong> &gt; <strong>Web app</strong> (เลือกสิทธิ์: <strong>Anyone</strong>)</li>
+          <li>คัดลอก URL ที่ได้มาวางในช่องด้านบน</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/sheets-sync.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
